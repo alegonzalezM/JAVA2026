@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Clientes</title>
+    <link rel="stylesheet" href="css/clientes.css">
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="link_volver">← Volver al Menú Principal</a>
+    <h2>Módulo Clientes (CRUD)</h2>
+    <br><br>
+
+    <!-- Formulario adaptado a los atributos de Cliente -->
+    <div class="form-group">
+        <label>DNI (ID):</label>
+        <input type="number" id="dni" placeholder="Ej: 38451293">
+        
+        <label>Nombre:</label>
+        <input type="text" id="nombre">
+
+        <label>Apellido:</label>
+        <input type="text" id="apellido">
+        
+        <label>Email:</label>
+        <input type="email" id="email">
+
+        <label>Teléfono:</label>
+        <input type="text" id="telefono">
+    </div>
+
+    <div class="actions">
+        <button onclick="crear()">Agregar</button>
+        <button onclick="leerTodos()">Cargar Clientes</button>
+        <button onclick="actualizar()">Modificar</button>
+        <button onclick="borrar()">Eliminar</button>
+        <button onclick="buscar()">Buscar por DNI</button>
+    </div>
+
+    <!-- Contenedor donde se insertará el foreach de clientes de la BD -->
+    <div class="products-grid" id="contenedor-clientes"></div>
+
+    <h3>Salida de Consola:</h3>
+    <pre id="consola">Listo...</pre>
+</div>
+
+<script>
+    // Bucle dinámico para listar clientes en tarjetas
+    const API_URL = 'http://localhost:8081/clientes'; 
+    const consola = document.getElementById('consola');
+    
+    // Variable global para guardar los clientes en memoria temporalmente
+    let listaClientesGlobal = []; 
+
+    function ver(res) { consola.innerText = typeof res === 'string' ? res : JSON.stringify(res, null, 2); }
+    function err(e) { consola.innerText = `Error: ${e.message}`; }
+
+    function manejarRespuesta(r) {
+        return r.text().then(t => {
+            if (!r.ok) throw new Error(t);
+            return t ? JSON.parse(t) : null;
+        });
+    }
+
+    function leerTodos() {
+        fetch(API_URL)
+        .then(manejarRespuesta)
+        .then(clientes => {
+            ver(clientes); 
+            
+            // Guardamos la lista en nuestra variable global
+            listaClientesGlobal = clientes; 
+            
+            const contenedor = document.getElementById("contenedor-clientes");
+            contenedor.innerHTML = ""; 
+
+            clientes.forEach(cliente => {
+                const card = document.createElement("div");
+                card.className = "product-card"; 
+
+                card.innerHTML = `
+                    <div class="product-title" style="font-size: 1.3rem; color: #333;">
+                        ${cliente.apellido}, ${cliente.nombre}
+                    </div>
+                    <div class="product-category" style="margin-top: 10px;">
+                        <strong>DNI:</strong> ${cliente.dni}
+                    </div>
+                    <div class="product-brand">
+                        <strong>Email:</strong> ${cliente.email}
+                    </div>
+                    <div class="product-price" style="font-size: 1.1rem; margin: 8px 0; color: #555;">
+                        📞 ${cliente.telefono}
+                    </div>
+                    <div class="actions-container" style="margin-top: 15px;">
+                        <!-- Pasamos únicamente el DNI numérico, evitando conflictos de texto -->
+                        <button class="btn-cargar-inputs" onclick="seleccionarClientePorDni(${cliente.dni})">Seleccionar</button>
+                    </div>
+                `;
+                contenedor.appendChild(card);
+            });
+        })
+        .catch(err);
+    }
+
+    // Nueva función intermedia: busca al cliente por DNI en la lista en memoria y llena los inputs
+    function seleccionarClientePorDni(dniABuscar) {
+        const clienteEncontrado = listaClientesGlobal.find(c => c.dni === dniABuscar);
+        if (clienteEncontrado) {
+            cargarCamposFormulario(clienteEncontrado);
+            ver(`Cliente con DNI ${dniABuscar} seleccionado.`);
+        }
+    }
+
+    function cargarCamposFormulario(c) {
+        document.getElementById('dni').value = c.dni || '';
+        document.getElementById('nombre').value = c.nombre || '';
+        document.getElementById('apellido').value = c.apellido || '';
+        document.getElementById('email').value = c.email || '';
+        document.getElementById('telefono').value = c.telefono || '';
+    }
+
+    function buscar() {
+        const dni = document.getElementById('dni').value;
+        if(!dni) return alert('Ingresa un número de DNI para buscar');
+        
+        fetch(`${API_URL}/${dni}`)
+        .then(manejarRespuesta)
+        .then(c => {
+            ver(c);
+            cargarCamposFormulario(c);
+        })
+        .catch(err);
+    }
+
+    function crear() {
+        const payload = {
+            dni: parseInt(document.getElementById('dni').value) || 0,
+            nombre: document.getElementById('nombre').value,
+            apellido: document.getElementById('apellido').value,
+            email: document.getElementById('email').value,
+            telefono: document.getElementById('telefono').value
+        };
+        
+        fetch(API_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(payload) 
+        })
+        .then(manejarRespuesta)
+        .then(() => { 
+            leerTodos(); 
+            ver("Cliente creado con éxito"); 
+        })
+        .catch(err);
+    }
+
+    function actualizar() {
+        const dni = document.getElementById('dni').value;
+        if(!dni) return alert('Ingresa el DNI del cliente que deseas modificar');
+        
+        const payload = {
+            dni: parseInt(dni),
+            nombre: document.getElementById('nombre').value,
+            apellido: document.getElementById('apellido').value,
+            email: document.getElementById('email').value,
+            telefono: document.getElementById('telefono').value
+        };
+        
+        fetch(`${API_URL}/${dni}`, { 
+            method: 'PUT', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(payload) 
+        })
+        .then(manejarRespuesta)
+        .then(() => { 
+            leerTodos(); 
+            ver("Cliente modificado con éxito"); 
+        })
+        .catch(err);
+    }
+
+    function borrar() {
+        const dni = document.getElementById('dni').value;
+        if(!dni) return alert('Ingresa el DNI del cliente que deseas eliminar');
+        if(!confirm(`¿Estás seguro de eliminar al cliente con DNI ${dni}?`)) return;
+
+        fetch(`${API_URL}/${dni}`, { method: 'DELETE' })
+        .then(r => r.ok ? ver("Cliente eliminado de la base de datos") : manejarRespuesta(r))
+        .then(() => leerTodos())
+        .catch(err);
+    }
+</script>
+</body>
+</html>

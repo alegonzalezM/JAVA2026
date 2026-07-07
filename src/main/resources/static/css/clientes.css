@@ -1,0 +1,38 @@
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+.form-group {
+    background: #dce9fd;
+    max-width: 600px;
+    width: 100%;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin: 20px auto 40px auto; 
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.client-card {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+.client-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #212529;
+    margin-bottom: 12px;
+}
+.client-detail {
+    font-size: 0.9rem;
+    color: #495057;
+    margin-bottom: 8px;
+}

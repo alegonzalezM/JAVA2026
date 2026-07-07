@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración - Productos</title>
+   <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container" id="container-admin">
+    <a href="productos.html" class="link_volver">← Volver al Catálogo Público</a>
+    <h2>Panel de Control CRUD (Uso Interno)</h2>
+
+    <div class="form-group">
+        <label for="id">ID del producto es necesario para modificar/eliminar/buscar :</label>
+        <input type="number" id="id" placeholder="Ej: 1">
+    </div>
+    <div class="form-group">
+        <label for="codigo">Código:</label>
+        <input type="text" id="codigo" placeholder="Bin19060">
+        <label for="nombre">Artículo:</label>
+        <input type="text" id="nombre" placeholder="">
+        <label for="precio">Precio:</label>
+        <input type="number" id="precio" placeholder="">
+        <label for="stock">Stock:</label>
+        <input type="number" id="stock" placeholder="">
+        <label for="categoria">Categoria:</label>
+        <select id="categoria">
+            <option value="">- Selecciona una categoria -</option>
+            <option value="BICICLETAS">BICICLETAS</option>
+            <option value="REPUESTOS">REPUESTOS</option>
+            <option value="ACCESORIOS">ACCESORIOS</option>
+            <option value="HERRAMIENTAS">HERRAMIENTAS</option>
+        </select>
+        <label for="marca">Marca:</label>
+        <select id="marca">
+             <option value="">Cargando marcas...</option>
+        </select>
+        <label for="imagenUrl">URL de Imagen:</label>
+        <input type="text" id="imagenUrl" placeholder="https://unsplash.com...">
+    </div>
+
+    <div class="actions">
+        <button class="btn-search" onclick="buscarParaModificar()"> Buscar por ID</button>
+        <button class="btn-create" onclick="crear()">Agregar producto</button>
+        <button class="btn-read" onclick="leerTodos()">Ver Todos</button>
+        <button class="btn-update" onclick="actualizar()">Modificar producto</button>
+        <button class="btn-delete" onclick="borrar()">Eliminar producto</button>
+    </div>
+
+    <h3>Salida de la API:</h3>
+    <div id="consola">Esperando acciones...</div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:8081/productos';
+    const consola = document.getElementById('consola');
+
+    function mostrarResultado(datos) {
+        consola.innerText = typeof datos === 'string' ? datos : JSON.stringify(datos, null, 2);
+    }
+    function mostrarError(err) {
+        consola.innerText = `Error: ${err.message}\n`;
+    }
+
+    function crear() {
+        const payload = { 
+            codigo: document.getElementById('codigo').value,
+            nombre: document.getElementById('nombre').value,
+            precio: parseFloat(document.getElementById('precio').value) || 0,
+            stock: parseInt(document.getElementById('stock').value) || 0,
+            categoria: document.getElementById('categoria').value.toUpperCase(), 
+            imagenUrl: document.getElementById('imagenUrl').value,
+            marca: { id: parseInt(document.getElementById('marca').value) }
+        };
+
+        fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => {
+            return res.text().then(t => {
+                if (!res.ok) throw new Error(t);
+                return JSON.parse(t);
+            });
+        })
+        .then(data => mostrarResultado({ mensaje: "Creado con éxito", data }))
+        .catch(mostrarError);
+    }
+
+    function leerTodos() {
+        fetch(API_URL)
+        .then(res => {
+            if(!res.ok) throw new Error("Error del servidor al obtener la lista");
+            return res.json();
+        })
+        .then(mostrarResultado)
+        .catch(mostrarError);
+    }
+
+    function actualizar() {
+        const id = document.getElementById('id').value;
+        if(!id) return alert('Debes ingresar el ID del producto a modificar');
+
+        const payload = {
+            id: parseInt(id), 
+            codigo: document.getElementById('codigo').value,
+            nombre: document.getElementById('nombre').value,
+            precio: parseFloat(document.getElementById('precio').value) || null,
+            stock: parseInt(document.getElementById('stock').value) || null,
+            categoria: document.getElementById('categoria').value.toUpperCase() || null, 
+            imagenUrl: document.getElementById('imagenUrl').value || null,
+            marca: { id: parseInt(document.getElementById('marca').value) }
+        };
+
+        fetch(`${API_URL}/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => {
+            return res.text().then(t => {
+                if (!res.ok) throw new Error(t); 
+                return JSON.parse(t);
+            });
+        })
+        .then(data => mostrarResultado({ mensaje: "Producto actualizado con éxito", data }))
+        .catch(mostrarError);
+    }
+
+    function borrar() {
+        const id = document.getElementById('id').value;
+        if(!id) return alert('Debes ingresar el ID del elemento que deseas borrar');
+        if(!confirm(`¿Estás seguro?`)) return;
+
+        fetch(`${API_URL}/${id}`, { method: 'DELETE' }) 
+        .then(res => {
+            if (!res.ok) return res.text().then(t => { throw new Error(t); });
+            return "Elemento eliminado con éxito.";
+        })
+        .then(mensaje => {
+            mostrarResultado(mensaje);
+            document.getElementById('id').value = '';
+            document.getElementById('nombre').value = '';
+        })
+        .catch(mostrarError); 
+    }
+
+    function buscarParaModificar() {
+        const idVal = document.getElementById('id').value;
+        if(!idVal) return alert('Ingresa el ID del producto');
+
+        fetch(`${API_URL}/${idVal}`)
+        .then(res => {
+            if (!res.ok) return res.text().then(t => { throw new Error(t); });
+            return res.json();
+        })
+        .then(producto => {
+            mostrarResultado({ mensaje: "Producto cargado", producto });
+            document.getElementById('codigo').value = producto.codigo || '';
+            document.getElementById('nombre').value = producto.nombre || '';
+            document.getElementById('precio').value = producto.precio || '';
+            document.getElementById('stock').value = producto.stock || '';
+            document.getElementById('categoria').value = producto.categoria || '';
+            document.getElementById('imagenUrl').value = producto.imagenUrl || '';
+            if(producto.marca) document.getElementById('marca').value = producto.marca.id;
+        })
+        .catch(mostrarError);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const selectMarca = document.getElementById('marca');
+        fetch('http://localhost:8081/marcas') 
+        .then(res => res.json())
+        .then(marcas => {
+            selectMarca.innerHTML = '<option value="">-- Selecciona una marca --</option>';
+            marcas.forEach(m => {
+                selectMarca.innerHTML += `<option value="${m.id}">${m.nombre}</option>`;
+            });
+        })
+        .catch(() => { selectMarca.innerHTML = '<option value="">Error al cargar marcas</option>'; });
+
+     const selectCategoria = document.getElementById('categoria');
+    
+    fetch(API_URL) 
+        .then(res => res.json())
+        .then(productos => {
+            selectCategoria.innerHTML = '<option value="">- Selecciona una categoria -</option>';
+            
+            const categoriasUnicas = [];
+            productos.forEach(p => {
+                if (p.categoria && !categoriasUnicas.includes(p.categoria)) {
+                    categoriasUnicas.push(p.categoria);
+                }
+            });
+
+            categoriasUnicas.forEach(cat => {
+                selectCategoria.innerHTML += `<option value="${cat.toUpperCase()}">${cat.toUpperCase()}</option>`;
+            });
+        })
+    });
+</script>
+</body>
+</html>

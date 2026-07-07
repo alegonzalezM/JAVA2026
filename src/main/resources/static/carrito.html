@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Carrito de Compras</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .cart-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .cart-table th, .cart-table td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .cart-table th { background-color: #1a1a1a; color: white; }
+        .total-container { text-align: right; margin-top: 20px; font-size: 1.5rem; font-weight: bold; }
+        .btn-vaciar { background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-vaciar:hover { background-color: #c82333; }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <nav class="navbar">
+            <a href="/productos.html" id="volver_catalogo_tx">⬅️ Volver al Catálogo</a>
+        </nav>
+    </header>
+
+    <main class="container" style="max-width: 1000px; margin: 40px auto; padding: 0 20px;">
+        <h1>Tu Carrito de Compras</h1>
+        
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio Unitario</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-carrito">
+                <!-- JavaScript inyectará las filas aquí de forma dinámica -->
+            </tbody>
+        </table>
+
+        <div class="total-container">
+            Total Estimado: <span id="precio-total" style="color: #28a745;">$0,00</span>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: right;">
+            <button class="btn-vaciar" onclick="vaciarCarrito()">Vaciar Carrito</button>
+        </div>
+    </main>
+        <script src="js/app.js"></script>
+</body>
+</html>
